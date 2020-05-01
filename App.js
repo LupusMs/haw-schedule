@@ -1,36 +1,32 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
+import React from 'react';
 
-import Header from './components/Header';
-import DailySchedule from './components/DailySchedule';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+
+import HomeScreen from './screens/HomeScreen';
+import DownloadScreen from './screens/DownloadScreen';
 
 const App = () => {
 
+  const today = new Date();
+  const Stack = createStackNavigator();
 
-
-  const today = new Date()
   return (
-    <View style={styles.container}>
-      <Header date={today.toDateString()} day='Today'></Header>
-      <DailySchedule></DailySchedule>
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: 'lightblue',
+          },
+        }}>
+        <Stack.Screen name='Home' component={HomeScreen}
+          options={{
+            title: today.toDateString(),
+          }} />
+        <Stack.Screen name="Download" component={DownloadScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  img: {
-    margin: 20,
-    width: 200,
-    height: 200,
-    borderRadius: 200 / 2,
-  },
-  response: {
-    flex: 2,
-  },
-
-})
 
 export default App;

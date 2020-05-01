@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 
+import * as SQLite from 'expo-sqlite';
+
 const DailySchedule = (props) => {
 
   const [data, setData] = useState([]);
@@ -17,6 +19,14 @@ const DailySchedule = (props) => {
     if (request.readyState === 4 && request.status === 200) {
       const type = request.getResponseHeader("Content-Type");
       if (type.indexOf("text") !== 1) {
+        const db = SQLite.openDatabase('HAWSchedule.db');
+        db.transaction(tx => {
+          tx.executeSql(
+            "CREATE TABLE IF NOT EXISTS entries (id INTEGER PRIMARY KEY NOT NULL, summary TEXT, location TEXT, description TEXT, start TEXT, end TEXT);"
+          );
+        });
+
+
         const lines = request.responseText.split("\n");
         for (let i = 0; i < lines.length; i++) {
           if (!lines[i].includes('BEGIN:VEVENT')) {
@@ -32,9 +42,25 @@ const DailySchedule = (props) => {
             end: lines[i + 6].split(':')[1],
           }
 
+          db.transaction(tx => {
+            tx.executeSql(
+              "INSERT INTO entries (summary, location, description, start, end) VALUES(?, ?, ?, ?, ? );",
+              [dataObject.summary, dataObject.location, dataObject.description, dataObject.start, dataObject.end]
+            );
+          });
+
           events.push(dataObject);
         }
         setData(events);
+        db.transaction(tx => {
+          tx.executeSql(
+            "SELECT * FROM entries;",
+            [],
+            (_, { rows }) =>
+          console.log(JSON.stringify(rows))
+          );
+        });
+
       }
     }
   };
@@ -56,7 +82,6 @@ const DailySchedule = (props) => {
       data.start.slice(13));
 
     const leftMargin = ((dt.getHours() + (dt.getMinutes() / 60.0) - DAY_STARTED) / (DAY_END - DAY_STARTED)) * 100 + '%';
-    console.log(leftMargin);
 
     return (
       <View style={styles.items} >
